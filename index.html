@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#07100b">
+  <meta name="description" content="钢铁前线：一款使用 HTML5 Canvas 打造的复古街机坦克大战。守住基地，突破四个战区。">
+  <title>钢铁前线 · TANK FRONT</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1510'/%3E%3Cpath d='M12 22h30v8H12zm7-8h10v6H19zm14 11h18v5H33zM20 32h24v14H20z' fill='%23f2c14e'/%3E%3Ccircle cx='32' cy='39' r='6' fill='%230b1510'/%3E%3C/svg%3E">
+</head>
+<body>
+  <div class="page-grid" aria-hidden="true"></div>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 44 44" fill="none">
+            <path d="M8 16h25v7H8z" fill="currentColor"/>
+            <path d="M15 11h10v5H15z" fill="currentColor"/>
+            <path d="M28 21h12v4H28z" fill="currentColor"/>
+            <path d="M12 25h22v12H12z" stroke="currentColor" stroke-width="3"/>
+            <circle cx="23" cy="31" r="4" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <span class="brand-kicker">ARMORED DIVISION // 88</span>
+          <h1>钢铁前线 <span class="brand-en">TANK FRONT</span></h1>
+        </div>
+      </div>
+
+      <div class="hud" aria-label="战场状态">
+        <div class="hud-item hud-item--score">
+          <span class="hud-label">得分 <em>SCORE</em></span>
+          <strong id="scoreVal">000000</strong>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">战区 <em>SECTOR</em></span>
+          <strong id="waveVal">01<span class="hud-dim"> / 04</span></strong>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">敌军 <em>HOSTILES</em></span>
+          <strong id="enemiesVal">--</strong>
+        </div>
+        <div class="hud-item hud-item--lives">
+          <span class="hud-label">装甲 <em>ARMOR</em></span>
+          <strong id="livesVal">03</strong>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button class="icon-btn" id="soundBtn" type="button" aria-label="静音" aria-pressed="false" title="音效 (M)">
+          <svg class="icon-unmuted" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor"/>
+            <path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <svg class="icon-muted" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 9v6h4l5 4V5L8 9H4Z" fill="currentColor"/>
+            <path d="m16 9 5 5m0-5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="pauseBtn" type="button" aria-label="暂停" title="暂停 (P)" disabled>
+          <svg class="icon-pause" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/>
+            <rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/>
+          </svg>
+          <svg class="icon-play" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M8 5.5v13l10.5-6.5L8 5.5Z" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="game-shell" aria-label="钢铁前线游戏区域">
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="gameCanvas" width="960" height="640" aria-label="坦克大战游戏画面">
+          你的浏览器需要支持 Canvas 才能运行《钢铁前线》。
+        </canvas>
+        <div class="canvas-grain" aria-hidden="true"></div>
+
+        <div class="boss-hud" id="bossHud" hidden>
+          <div class="boss-heading">
+            <span>WARNING // HEAVY UNIT</span>
+            <strong>攻城者</strong>
+          </div>
+          <div class="boss-bar"><i id="bossBar"></i></div>
+        </div>
+
+        <section class="screen screen--menu is-active" id="menuScreen" aria-label="开始菜单">
+          <div class="menu-inner">
+            <div class="status-chip"><i></i> 战斗系统已就绪 <span>// 04 SECTORS</span></div>
+
+            <div class="title-lockup">
+              <p class="title-overline">OPERATION IRON FRONT · 1988</p>
+              <h2 class="game-title">钢铁<span>前线</span></h2>
+              <p class="game-title-en">TANK<span>_</span>FRONT</p>
+            </div>
+
+            <p class="menu-lead">最后一道防线正在崩溃。驾驶主战坦克穿过四片焦土，<br class="lead-break">守住鹰徽基地，歼灭来犯的装甲集群。</p>
+
+            <div class="menu-actions">
+              <button class="btn btn--primary" id="startBtn" type="button">
+                <span class="btn-copy"><strong>开始作战</strong><small>ENGAGE</small></span>
+                <span class="btn-arrow" aria-hidden="true">→</span>
+              </button>
+              <div class="best-score">
+                <span>本机最高纪录</span>
+                <strong id="menuBest">000000</strong>
+              </div>
+            </div>
+
+            <div class="controls-panel" aria-label="操作说明">
+              <div class="control-item">
+                <span class="keycap keycap--wide">WASD</span>
+                <span>驾驶</span>
+              </div>
+              <div class="control-item">
+                <span class="keycap keycap--wide">SPACE</span>
+                <span>开火</span>
+              </div>
+              <div class="control-item">
+                <span class="keycap">P</span>
+                <span>暂停</span>
+              </div>
+              <div class="control-item">
+                <span class="keycap">M</span>
+                <span>静音</span>
+              </div>
+            </div>
+
+            <div class="mission-meta">
+              <span><em>01</em> 四个战区</span>
+              <span><em>02</em> 五类敌军</span>
+              <span><em>03</em> 守住基地</span>
+            </div>
+          </div>
+          <div class="menu-watermark" aria-hidden="true">DEFEND<br>THE EAGLE</div>
+          <div class="menu-corner">TACTICAL COMMAND / 前线指挥部</div>
+        </section>
+
+        <section class="screen screen--modal" id="pauseScreen" aria-label="游戏暂停">
+          <div class="modal-card">
+            <p class="screen-kicker">SYSTEM PAUSED // 战术暂停</p>
+            <h2>战斗暂停</h2>
+            <p class="modal-desc">战场状态已冻结。整理战术，再回到火线。</p>
+            <div class="modal-actions">
+              <button class="btn btn--primary btn--compact" id="resumeBtn" type="button">
+                <span class="btn-copy"><strong>继续作战</strong><small>RESUME</small></span>
+                <span class="btn-arrow" aria-hidden="true">→</span>
+              </button>
+              <button class="btn btn--ghost" id="restartBtn" type="button">重新开始</button>
+              <button class="text-btn" id="quitBtn" type="button">返回首页</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen screen--modal" id="resultScreen" aria-label="战斗结算">
+          <div class="modal-card result-card">
+            <p class="screen-kicker" id="resultKicker">MISSION FAILED</p>
+            <h2 id="resultTitle">基地陷落</h2>
+            <p class="modal-desc" id="resultDesc">防线已被突破。</p>
+            <div class="result-stats">
+              <div>
+                <span>本次得分</span>
+                <strong id="resultScore">000000</strong>
+              </div>
+              <div>
+                <span>推进战区</span>
+                <strong id="resultWave">01 / 04</strong>
+              </div>
+              <div>
+                <span>最高纪录</span>
+                <strong id="resultBest">000000</strong>
+              </div>
+            </div>
+            <div class="modal-actions modal-actions--row">
+              <button class="btn btn--primary btn--compact" id="againBtn" type="button">
+                <span class="btn-copy"><strong>再次出击</strong><small>REDEPLOY</small></span>
+                <span class="btn-arrow" aria-hidden="true">→</span>
+              </button>
+              <button class="text-btn" id="homeBtn" type="button">返回首页</button>
+            </div>
+          </div>
+        </section>
+
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="touch-controls" id="touchControls" aria-label="触屏操作">
+      <div class="dpad">
+        <button class="touch-btn touch-up" type="button" data-dir="up" aria-label="向上">▲</button>
+        <button class="touch-btn touch-left" type="button" data-dir="left" aria-label="向左">◀</button>
+        <button class="touch-btn touch-right" type="button" data-dir="right" aria-label="向右">▶</button>
+        <button class="touch-btn touch-down" type="button" data-dir="down" aria-label="向下">▼</button>
+        <span class="dpad-center" aria-hidden="true"></span>
+      </div>
+      <button class="fire-btn" id="fireBtn" type="button" aria-label="开火">
+        <span>开火</span>
+        <small>FIRE</small>
+      </button>
+    </section>
+
+    <footer class="footer">
+      <div class="control-hints">
+        <span><kbd>WASD</kbd> / <kbd>方向键</kbd> 驾驶</span>
+        <span><kbd>SPACE</kbd> 开火</span>
+        <span><kbd>P</kbd> 暂停</span>
+        <span><kbd>M</kbd> 音效</span>
+      </div>
+      <div class="build-mark"><i></i> IRON FRONT <span>BUILD 1.0.0</span></div>
+    </footer>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
