@@ -2,6 +2,8 @@
 
 一款用纯 HTML5 Canvas 写的复古街机坦克大战。没有框架、没有构建步骤，双击 `index.html` 就能玩。
 
+**在线试玩：** https://01wbh.github.io/tank-battle/
+
 ![游戏截图](screenshot.png)
 
 ## 玩法
